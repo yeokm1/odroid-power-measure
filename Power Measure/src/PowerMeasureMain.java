@@ -24,7 +24,9 @@ public class PowerMeasureMain {
 	public static final String TEXT_HELP = "Insufficient/Invalid arguments. Please supply duration to sample in milliseconds";
 	public static final String TEXT_PROGRESS_FORMAT = "Current(W) %04d: A15:%010.5f, A7:%010.5f, GPU:%010.5f, MEM:%010.5f";
 	public static final String TEXT_TOTAL_FORMAT =    "Total  (J) %04d: A15:%010.5f, A7:%010.5f, GPU:%010.5f, MEM:%010.5f\n";
-	public static final String TEXT_FINAL_POWER = "Total Power used over %d samples: %fJ";
+	
+	public static final String TEXT_FINAL_INDV_FORMAT = "Total[J): A15: %.2f, A7: %.2f, GPU: %.2f, MEM: %.2f\n";
+	public static final String TEXT_FINAL_POWER = "Total Power used over %d samples: %.2fJ";
 	
 	public static final long SAMPLE_RATE = 1000;
 	
@@ -82,10 +84,16 @@ public class PowerMeasureMain {
 			}
 		}
 		
+		
+		
 		double totalPower = totalA15Power + totalA7Power + totalGPUPower + totalMemPower;
 		
+		
+		String indvPowerString = String.format(TEXT_FINAL_INDV_FORMAT, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
 		String powerString = String.format(TEXT_FINAL_POWER, numSamples, totalPower);
 		
+		printToScreen("\n");
+		printToScreen(indvPowerString);
 		printToScreen(powerString);
 		
 		
