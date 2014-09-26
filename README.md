@@ -16,6 +16,9 @@ Outputs current power usage in watts and final total power use in Joules.
 ##Sampling rate
 Sample rate is 1/second.
 
+##Dependencies
+The `adb shell` command.
+
 ##Files used
 A7 CPU: "/sys/bus/i2c/drivers/INA231/4-0045/sensor_W"  
 A15 CPU: "/sys/bus/i2c/drivers/INA231/4-0040/sensor_W"  
