@@ -11,6 +11,8 @@ A Java program that measure total power usage of Odroid-XU.
 java -jar powermeasure.jar 5000
 ```
 
+Outputs current power usage in watts and final total power use in Joules.
+
 ##Sampling rate
 Sample rate is 1/second.
 
