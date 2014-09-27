@@ -21,18 +21,20 @@ public class PowerMeasureMain {
 	public static final String COMMAND_GPU_POWER = String.format(COMMAND_SHELL_FORMAT, POWER_FILE_GPU);
 	
 	
-	public static final String TEXT_HELP = "Insufficient/Invalid arguments. Please supply duration to sample in milliseconds";
+	public static final String TEXT_HELP = "Invalid arguments. Please supply number of samples to take at once/second.";
 	public static final String TEXT_PROGRESS_FORMAT = "Current(W) %04d: A15:%010.5f, A7:%010.5f, GPU:%010.5f, MEM:%010.5f";
 	public static final String TEXT_TOTAL_FORMAT =    "Total  (J) %04d: A15:%010.5f, A7:%010.5f, GPU:%010.5f, MEM:%010.5f\n";
+	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec.";
+	public static final String TEXT_SAMPLES_REQUIRED = "Going for %d sample(s) at once/second";
+	
 	
 	public static final String TEXT_FINAL_INDV_FORMAT = "Total(J): A15: %.2f, A7: %.2f, GPU: %.2f, MEM: %.2f\n";
 	public static final String TEXT_FINAL_POWER = "Total Power used over %d samples: %.2fJ";
 	
 	public static final long SAMPLE_RATE = 1000;
 	
-	private static long startTime;
-	
-	private static long sampleDuration;
+	public static final long INDEFINITE_SAMPLING = -1;
+	private static long totalSamplesRequired = INDEFINITE_SAMPLING;
 	
 	private static double totalA7Power = 0;
 	private static double totalA15Power = 0;
@@ -43,26 +45,33 @@ public class PowerMeasureMain {
 
 	public static void main(String[] args) {
 		
-		if(args.length < 1){
-			printToScreen(TEXT_HELP);
-			return;
+		if(args.length > 0){
+			try{
+				totalSamplesRequired = Long.parseLong(args[0]);
+				if(totalSamplesRequired < 0){
+					throw new NumberFormatException();
+				}
+				
+				printToScreen(String.format(TEXT_SAMPLES_REQUIRED, totalSamplesRequired));
+			} catch (NumberFormatException e){
+				printToScreen(TEXT_HELP);
+				return;
+			}
+			
+		} else {
+			printToScreen(TEXT_INDEFINITE_SAMPLING);
 		}
 		
 
-		try{
-			sampleDuration = Long.parseLong(args[0]);
-		} catch (NumberFormatException e){
-			printToScreen(TEXT_HELP);
-			return;
-		}
+
 		
 		
 		runCommandAndGetOutput(COMMAND_INIT_ADB);
 		
-		startTime = System.currentTimeMillis();
 
 		while(shouldContinueSampling()){
 			numSamples++;
+			
 			double currentA15Power = getPowerFromCommand(COMMAND_A15_POWER);
 			double currentA7Power = getPowerFromCommand(COMMAND_A7_POWER);
 			double currentGPUPower = getPowerFromCommand(COMMAND_GPU_POWER);
@@ -82,6 +91,7 @@ public class PowerMeasureMain {
 				Thread.sleep(SAMPLE_RATE);
 			} catch (InterruptedException e) {
 			}
+			
 		}
 		
 		
@@ -102,15 +112,16 @@ public class PowerMeasureMain {
 	}
 	
 	public static boolean shouldContinueSampling(){
-		long currentTime = System.currentTimeMillis();
-		long difference = currentTime - startTime;
 		
-		if(difference > sampleDuration){
+		if(totalSamplesRequired == INDEFINITE_SAMPLING){
+			return true;
+		}
+		
+		if(numSamples >= totalSamplesRequired){
 			return false;
 		} else {
 			return true;
 		}
-		
 		
 	}
 	
