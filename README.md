@@ -9,8 +9,8 @@ A Java program that measure total power usage of Odroid-XU.
 Go to Settings -> Developer Options. Enable "Show CPU usage" option.
 
 ```bash
-#To measure power use over 5 seconds
-java -jar powermeasure.jar 5000
+#To measure power use over 10 samples
+java -jar powermeasure.jar 10
 ```
 
 Outputs current power usage in watts and final total power use in Joules.
