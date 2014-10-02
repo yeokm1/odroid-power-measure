@@ -22,8 +22,8 @@ public class PowerMeasureMain {
 	
 	
 	public static final String TEXT_HELP = "Invalid arguments. Please supply number of samples to take at once/second.";
-	public static final String TEXT_PROGRESS_FORMAT = "Current(W) %04d: A15:%010.5f, A7:%010.5f, GPU:%010.5f, MEM:%010.5f";
-	public static final String TEXT_TOTAL_FORMAT =    "Total  (J) %04d: A15:%010.5f, A7:%010.5f, GPU:%010.5f, MEM:%010.5f\n";
+	public static final String TEXT_PROGRESS_FORMAT = "Current(W) %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
+	public static final String TEXT_TOTAL_FORMAT =    "Total  (J) %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f\n";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec.";
 	public static final String TEXT_SAMPLES_REQUIRED = "Going for %d sample(s) at once/second";
 	
