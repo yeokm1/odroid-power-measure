@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -149,6 +150,11 @@ public class PowerMeasureMain {
 		
 
 		InitADB.initADB();
+		
+		
+		printToScreen("Press enter to begin...");
+		Scanner keyboard = new Scanner(System.in);
+		keyboard.nextLine();
 
 		
 		ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
