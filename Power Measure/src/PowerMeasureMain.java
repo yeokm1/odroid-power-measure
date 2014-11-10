@@ -21,7 +21,7 @@ public class PowerMeasureMain {
 			+ "-freq: Don't poll for frequency\n" 
 			+ "-fps: Don't poll for FPS\n" 
 			+ "-power: Don't poll for power\n"
-			+ "-chart: Don't show chart\n"; 
+			+ "-chart: Don't show GUI chart\n"; 
 	public static final String TEXT_HELP_OFFER = "Add the \"help\" argument to know more"; 
 	public static final String TEXT_HELP_INVALID_NUMBER = "Invalid arguments. Please supply correct number of samples to take at once/second.";
 	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
