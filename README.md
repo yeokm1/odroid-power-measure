@@ -1,7 +1,7 @@
 odroid-power-measure
 ====================
 
-A Java program that measure total power usage and average FPS of Odroid-XU.
+A Java program that dynamically shows FPS, CPU/GPU frequency and power of Odroid-XU.
 
 
 ##Usage
@@ -9,8 +9,13 @@ A Java program that measure total power usage and average FPS of Odroid-XU.
 Go to Settings -> Developer Options. Enable "Show CPU usage" option.
 
 ```bash
-#To measure power use over 10 samples
-java -jar powermeasure.jar 10
+java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart]
+n: number of samples to take at once/second (>=0)"
+-freq: Don't poll for frequency
+-fps: Don't poll for FPS
+-power: Don't poll for power
+-chart: Don't show chart
+
 ```
 
 Outputs current power usage in watts and final total power use in Joules. Current FPS is shown. At the end, average FPS, minimum, maximum and standard deviation are shown.
@@ -22,10 +27,14 @@ Sample rate is 1/second.
 The `adb shell` command.
 
 ##Files used
-A7 CPU: "/sys/bus/i2c/drivers/INA231/4-0045/sensor_W"  
-A15 CPU: "/sys/bus/i2c/drivers/INA231/4-0040/sensor_W"  
-Memory: "/sys/bus/i2c/drivers/INA231/4-0041/sensor_W"  
-GPU: "/sys/bus/i2c/drivers/INA231/4-0044/sensor_W"  
+A7 CPU Power: "/sys/bus/i2c/drivers/INA231/4-0045/sensor_W"  
+A15 CPU Power: "/sys/bus/i2c/drivers/INA231/4-0040/sensor_W"  
+Memory Power: "/sys/bus/i2c/drivers/INA231/4-0041/sensor_W"  
+GPU Power: "/sys/bus/i2c/drivers/INA231/4-0044/sensor_W"  
+
+CPU Freq: "/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"  
+GPU Freq: "/sys/devices/platform/pvrsrvkm.0/sgx_dvfs_cur_clk"
+
 
 ##FPS
 FPS command: "dumpsys SurfaceFlinger --latency SurfaceView"
