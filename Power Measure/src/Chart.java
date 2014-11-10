@@ -88,11 +88,6 @@ public class Chart extends ApplicationFrame{
 
         ValueAxis yAxis = plot.getRangeAxis();
         yAxis.setRange(new Range(minY, maxY));
-//        ValueAxis axis = plot.getDomainAxis();
-//        axis.setR
-//        Range range = new Range(0, 60);
-//        axis.setRange(range);
-
         return chart;
 
     }
