@@ -9,7 +9,9 @@ import java.util.concurrent.TimeUnit;
 public class PowerMeasureMain {
 
 
-
+	public static final String VERSION = "v0.7";
+	
+	
 	public static final String ARG_NO_FREQ = "-freq";
 	public static final String ARG_NO_FPS = "-fps";
 	public static final String ARG_NO_POWER = "-power";
@@ -21,7 +23,8 @@ public class PowerMeasureMain {
 			+ "-freq: Don't poll for frequency\n" 
 			+ "-fps: Don't poll for FPS\n" 
 			+ "-power: Don't poll for power\n"
-			+ "-chart: Don't show GUI chart\n"; 
+			+ "-chart: Don't show GUI chart\n"
+			+ VERSION;
 	public static final String TEXT_HELP_OFFER = "Add the \"help\" argument to know more"; 
 	public static final String TEXT_HELP_INVALID_NUMBER = "Invalid arguments. Please supply correct number of samples to take at once/second.";
 	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
