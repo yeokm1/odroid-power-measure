@@ -8,22 +8,24 @@ import java.util.concurrent.TimeUnit;
 
 public class PowerMeasureMain {
 
-	
-	
+
+
 	public static final String ARG_NO_FREQ = "-freq";
 	public static final String ARG_NO_FPS = "-fps";
 	public static final String ARG_NO_POWER = "-power";
+	public static final String ARG_NO_CHART = "-chart";
 	public static final String ARG_HELP = "help";
 
-	public static final String TEXT_HELP= "Usage: java -jar powermeasure.jar [n] [-freq] [-fps] [-power]\n"
+	public static final String TEXT_HELP= "Usage: java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart]\n"
 			+ "n: number of samples to take at once/second (>=0)\n"
 			+ "-freq: Don't poll for frequency\n" 
 			+ "-fps: Don't poll for FPS\n" 
-			+ "-power: Don't poll for power\n"; 
+			+ "-power: Don't poll for power\n"
+			+ "-chart: Don't show chart\n"; 
 	public static final String TEXT_HELP_OFFER = "Add the \"help\" argument to know more"; 
 	public static final String TEXT_HELP_INVALID_NUMBER = "Invalid arguments. Please supply correct number of samples to take at once/second.";
 	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
-	
+
 	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: %d, Average: %d";
 
 	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
@@ -31,7 +33,7 @@ public class PowerMeasureMain {
 
 	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, freqency and power.";
-	
+
 	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Freq: %s, Power: %s";	
 	public static final String TEXT_SAMPLES_REQUIRED = "Going for %d sample(s) at once/second";
 
@@ -68,51 +70,55 @@ public class PowerMeasureMain {
 	private static boolean shouldPollFPS = true;
 	private static boolean shouldPollPower  = true;
 	private static boolean shouldPollFreq = true;
-	
-	
+	private static boolean shouldShowChart = true;
+
+
 	private static boolean isPreviousCommandStillRunning = false;
-	
+
 	private static Chart fpsChart;
 	private static Chart cpuFreqChart;
 	private static Chart gpuFreqChart;
 	private static Chart powerChart;
-	
+
 	public static void main(String[] args) {
-	
+
 
 		if(args.length > 0){
 			try{
 
-				
+
 				for(String arg : args){
 					switch(arg){
-						case ARG_NO_FPS:
-							shouldPollFPS = false;
-							break;
-						case ARG_NO_FREQ:
-							shouldPollFreq = false;
-							break;
-						case ARG_NO_POWER:
-							shouldPollPower = false;
-							break;
-						case ARG_HELP:
-							printToScreen(TEXT_HELP);
-							return;
-						default:
-							totalSamplesRequired = Long.parseLong(arg);
-							if(totalSamplesRequired < 0){
-								throw new NumberFormatException();
-							}
-								
+					case ARG_NO_FPS:
+						shouldPollFPS = false;
+						break;
+					case ARG_NO_FREQ:
+						shouldPollFreq = false;
+						break;
+					case ARG_NO_POWER:
+						shouldPollPower = false;
+						break;
+					case ARG_NO_CHART:
+						shouldShowChart = false;
+						break;
+					case ARG_HELP:
+						printToScreen(TEXT_HELP);
+						return;
+					default:
+						totalSamplesRequired = Long.parseLong(arg);
+						if(totalSamplesRequired < 0){
+							throw new NumberFormatException();
+						}
+
 					}
 				}
-				
+
 				printToScreen(TEXT_HELP_OFFER);
 				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower){
 					printToScreen(String.format(TEXT_HELP_NO_POLL));
 					return;
 				}
-				
+
 				if(totalSamplesRequired >= 0){
 					printToScreen(String.format(TEXT_SAMPLES_REQUIRED, totalSamplesRequired));
 				} else {
@@ -130,43 +136,44 @@ public class PowerMeasureMain {
 			printToScreen(TEXT_HELP_OFFER);
 			printToScreen(TEXT_INDEFINITE_SAMPLING);
 		}
-		
+
 		printToScreen("");
 
 		fpsData = new ArrayList<Integer>();
 
-		if(shouldPollFPS){
-			initFPSChart();
+		if(shouldShowChart){
+			if(shouldPollFPS){
+				initFPSChart();
+			}
+
+			if(shouldPollFreq){
+				initCPUFreqChart();
+				initGPUFreqChart();
+			}
+
+			if(shouldPollPower){
+				initPowerChart();
+			}
 		}
-		
-		if(shouldPollFreq){
-			initCPUFreqChart();
-			initGPUFreqChart();
-		}
-		
-		if(shouldPollPower){
-			initPowerChart();
-		}
-		
 
 		InitADB.initADB();
-		
-		
+
+
 		printToScreen("Press enter to begin...");
 		Scanner keyboard = new Scanner(System.in);
 		keyboard.nextLine();
 		keyboard.close();
 
-		
+
 		ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
 		exec.scheduleAtFixedRate(new Runnable() {
-			  @Override
-			  public void run() {
-				  if(!isPreviousCommandStillRunning){
+			@Override
+			public void run() {
+				if(!isPreviousCommandStillRunning){
 					isPreviousCommandStillRunning = true;
-					
+
 					if(shouldContinueSampling()){
-						
+
 
 						int currentSample = numSamples;
 						numSamples++;
@@ -187,23 +194,23 @@ public class PowerMeasureMain {
 								String total = String.format(TEXT_TOTAL_FORMAT, numSamples, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
 								printToScreen(total);
 							}
-							
+
 							printToScreen("");
 						} catch(Exception e){
 							numSamples = currentSample;
 						}
-						
+
 					} else {
 						exec.shutdownNow();
 						endMessages();
 					}
 					isPreviousCommandStillRunning = false;
-				  }
-			  }
-			}, 0, SAMPLE_RATE, TimeUnit.MILLISECONDS);
+				}
+			}
+		}, 0, SAMPLE_RATE, TimeUnit.MILLISECONDS);
 
 	}
-	
+
 	public static void endMessages(){
 		printToScreen("");
 		if(shouldPollFPS){
@@ -237,12 +244,14 @@ public class PowerMeasureMain {
 			if(fps > maxFPS){
 				maxFPS = fps;
 			}
-			
+
 		} else {
 			throw new Exception();
 		}
-		
-		fpsChart.addData(numSamples, fps);
+
+		if(shouldShowChart) {
+			fpsChart.addData(numSamples, fps);
+		}
 
 		int averageFPS = getAverageFPS();
 		String output = String.format(TEXT_FPS_PROGRESS_FORMAT, numSamples ,fps, averageFPS);
@@ -261,7 +270,10 @@ public class PowerMeasureMain {
 		totalMemPower += currentMEMPower;
 
 		double totalCurrentPower = currentA15Power + currentA7Power + currentGPUPower + currentMEMPower;
-		powerChart.addData(numSamples, totalCurrentPower);
+
+		if(shouldShowChart) {
+			powerChart.addData(numSamples, totalCurrentPower);
+		}
 		
 		String currentPower = String.format(TEXT_POWER_PROGRESS_FORMAT, numSamples, currentA15Power, currentA7Power, currentGPUPower, currentMEMPower);
 		return currentPower;
@@ -271,10 +283,11 @@ public class PowerMeasureMain {
 	public static String pollFreq(){
 		double currentCPUFreq = CPUStatsRetrieval.getCPUFreq() / 1000;
 		double currentGPUFreq = GPUStatsRetrieval.getGPUFreq();
-		
-		cpuFreqChart.addData(numSamples, currentCPUFreq);
-		gpuFreqChart.addData(numSamples, currentGPUFreq);
-		
+
+		if(shouldShowChart) {
+			cpuFreqChart.addData(numSamples, currentCPUFreq);
+			gpuFreqChart.addData(numSamples, currentGPUFreq);
+		}
 		String currentFreq = String.format(TEXT_FREQ_PROGRESS_FORMAT, numSamples, currentCPUFreq, currentGPUFreq);
 		return currentFreq;
 	}
@@ -325,27 +338,27 @@ public class PowerMeasureMain {
 
 
 	public static void initFPSChart(){
-        fpsChart = openChart("FPS", "FPS", 0, 65);
+		fpsChart = openChart("FPS", "FPS", 0, 65);
 	}
-	
+
 	public static void initCPUFreqChart(){
-        cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", 0, 1700);
+		cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", 0, 1700);
 	}
-	
+
 	public static void initGPUFreqChart(){
-        gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", 0, 700);
+		gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", 0, 700);
 	}
-	
+
 	public static void initPowerChart(){
-        powerChart = openChart("Power use (W)", "Power (W)", 0, 7);
+		powerChart = openChart("Power use (W)", "Power (W)", 0, 7);
 	}
 
 
 	public static Chart openChart(String title, String yAxisLabel, double minY, double maxY){
-        Chart chart = new Chart(title, yAxisLabel, minY, maxY);
-        chart.pack();
-        chart.setVisible(true);
-        return chart;
+		Chart chart = new Chart(title, yAxisLabel, minY, maxY);
+		chart.pack();
+		chart.setVisible(true);
+		return chart;
 	}
 
 
