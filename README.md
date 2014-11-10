@@ -10,11 +10,11 @@ Go to Settings -> Developer Options. Enable "Show CPU usage" option.
 
 ```bash
 java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart]
-[n]: number of samples to take at once/second (>=0)"
-[-freq]: Don't poll for frequency
-[-fps]: Don't poll for FPS
-[-power]: Don't poll for power
-[-chart]: Don't show chart
+n: number of samples to take at once/second (>=0)"
+-freq: Don't poll for frequency
+-fps: Don't poll for FPS
+-power: Don't poll for power
+-chart: Don't show chart
 
 ```
 
