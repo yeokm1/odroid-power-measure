@@ -4,16 +4,24 @@ import java.util.List;
 
 public class PowerMeasureMain {
 
+	
+	
+	public static final String ARG_NO_FREQ = "-freq";
+	public static final String ARG_NO_FPS = "-fps";
+	public static final String ARG_NO_POWER = "-power";
 
 	public static final String TEXT_HELP = "Invalid arguments. Please supply number of samples to take at once/second.";
-
+	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
+	
 	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: %d, Average: %d";
 
 	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_FREQ_PROGRESS_FORMAT =  "Freq(MHz) %04d: CPU: %.0f, GPU: %.0f";
 
 	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f\n";
-	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec.";
+	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, freqency and power.";
+	
+	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Freq: %s, Power: %s";	
 	public static final String TEXT_SAMPLES_REQUIRED = "Going for %d sample(s) at once/second";
 
 
@@ -48,15 +56,44 @@ public class PowerMeasureMain {
 
 
 	public static void main(String[] args) {
+	
+		boolean shouldPollPower = true;
+		boolean shouldPollFPS = true;
+		boolean shouldPollFreq = true;
+		
 
 		if(args.length > 0){
 			try{
-				totalSamplesRequired = Long.parseLong(args[0]);
-				if(totalSamplesRequired < 0){
-					throw new NumberFormatException();
-				}
 
+				
+				for(String arg : args){
+					switch(arg){
+						case ARG_NO_FPS:
+							shouldPollFPS = false;
+							break;
+						case ARG_NO_FREQ:
+							shouldPollFreq = false;
+							break;
+						case ARG_NO_POWER:
+							shouldPollPower = false;
+							break;
+						default:
+							totalSamplesRequired = Long.parseLong(arg);
+							if(totalSamplesRequired < 0){
+								throw new NumberFormatException();
+							}
+								
+					}
+				}
+				
+				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower){
+					printToScreen(String.format(TEXT_HELP_NO_POLL));
+					return;
+				}
+				
 				printToScreen(String.format(TEXT_SAMPLES_REQUIRED, totalSamplesRequired));
+				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollFreq, shouldPollPower));
+
 			} catch (NumberFormatException e){
 				printToScreen(TEXT_HELP);
 				return;
@@ -65,6 +102,8 @@ public class PowerMeasureMain {
 		} else {
 			printToScreen(TEXT_INDEFINITE_SAMPLING);
 		}
+		
+		printToScreen("");
 
 		fpsData = new ArrayList<Integer>();
 
@@ -73,9 +112,6 @@ public class PowerMeasureMain {
 		InitADB.initADB();
 
 
-		boolean shouldPollPower = true;
-		boolean shouldPollFPS = true;
-		boolean shouldPollFreq = true;
 
 		while(shouldContinueSampling()){
 			int currentSample = numSamples;
