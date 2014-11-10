@@ -155,6 +155,7 @@ public class PowerMeasureMain {
 		printToScreen("Press enter to begin...");
 		Scanner keyboard = new Scanner(System.in);
 		keyboard.nextLine();
+		keyboard.close();
 
 		
 		ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
