@@ -9,7 +9,7 @@ public abstract class InfoRetrieval {
 	
 	public static final String COMMAND_SHELL_FORMAT = "adb shell cat %s";
 
-	public static double getPowerFromCommand(String command){
+	public static double getValueFromCommand(String command){
 		String output = runCommandAndGetOutput(command);
 		double powerUse = Double.parseDouble(output);
 		return powerUse;
