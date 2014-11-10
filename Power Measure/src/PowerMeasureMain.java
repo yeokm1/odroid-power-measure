@@ -71,6 +71,11 @@ public class PowerMeasureMain {
 	
 	private static boolean isPreviousCommandStillRunning = false;
 	
+	private static Chart fpsChart;
+	private static Chart cpuFreqChart;
+	private static Chart gpuFreqChart;
+	private static Chart powerChart;
+	
 	public static void main(String[] args) {
 	
 
@@ -129,7 +134,19 @@ public class PowerMeasureMain {
 
 		fpsData = new ArrayList<Integer>();
 
-
+		if(shouldPollFPS){
+			initFPSChart();
+		}
+		
+		if(shouldPollFreq){
+			initCPUFreqChart();
+			initGPUFreqChart();
+		}
+		
+		if(shouldPollPower){
+			initPowerChart();
+		}
+		
 
 		InitADB.initADB();
 
@@ -217,6 +234,8 @@ public class PowerMeasureMain {
 		} else {
 			throw new Exception();
 		}
+		
+		fpsChart.addData(numSamples, fps);
 
 		int averageFPS = getAverageFPS();
 		String output = String.format(TEXT_FPS_PROGRESS_FORMAT, numSamples ,fps, averageFPS);
@@ -234,7 +253,9 @@ public class PowerMeasureMain {
 		totalGPUPower += currentGPUPower;
 		totalMemPower += currentMEMPower;
 
-
+		double totalCurrentPower = currentA15Power + currentA7Power + currentGPUPower + currentMEMPower;
+		powerChart.addData(numSamples, totalCurrentPower);
+		
 		String currentPower = String.format(TEXT_POWER_PROGRESS_FORMAT, numSamples, currentA15Power, currentA7Power, currentGPUPower, currentMEMPower);
 		return currentPower;
 	}
@@ -243,6 +264,10 @@ public class PowerMeasureMain {
 	public static String pollFreq(){
 		double currentCPUFreq = CPUStatsRetrieval.getCPUFreq() / 1000;
 		double currentGPUFreq = GPUStatsRetrieval.getGPUFreq();
+		
+		cpuFreqChart.addData(numSamples, currentCPUFreq);
+		gpuFreqChart.addData(numSamples, currentGPUFreq);
+		
 		String currentFreq = String.format(TEXT_FREQ_PROGRESS_FORMAT, numSamples, currentCPUFreq, currentGPUFreq);
 		return currentFreq;
 	}
@@ -292,12 +317,26 @@ public class PowerMeasureMain {
 
 
 
+	public static void initFPSChart(){
+        fpsChart = openChart("FPS", "FPS", 0, 65);
+	}
+	
+	public static void initCPUFreqChart(){
+        cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", 0, 1700);
+	}
+	
+	public static void initGPUFreqChart(){
+        gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", 0, 700);
+	}
+	
+	public static void initPowerChart(){
+        powerChart = openChart("Power use (W)", "Power (W)", 0, 7);
+	}
 
-	public static Chart openChart(){
-        Chart chart = new Chart(
-                "CPU Freq");
+
+	public static Chart openChart(String title, String yAxisLabel, double minY, double maxY){
+        Chart chart = new Chart(title, yAxisLabel, minY, maxY);
         chart.pack();
-//        RefineryUtilities.centerFrameOnScreen(chart);
         chart.setVisible(true);
         return chart;
 	}

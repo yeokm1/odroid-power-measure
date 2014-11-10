@@ -1,17 +1,17 @@
 import java.awt.Color;
-import java.text.SimpleDateFormat;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.time.Second;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.Range;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleInsets;
 
@@ -19,53 +19,52 @@ import org.jfree.ui.RectangleInsets;
 public class Chart extends ApplicationFrame{
 
 
+	private static final int MAX_DATA_COUNT = 20;
 	private static final long serialVersionUID = -244453266060112290L;
-	private TimeSeries dataSeries;
+	private XYSeries dataSeries;
 	
 	
-	public Chart(String chartTitle) {
+	public Chart(String chartTitle, String yAxisLabel, double minY, double maxY) {
 		super(chartTitle);
 		
-        dataSeries = new TimeSeries(chartTitle);
-        dataSeries.setMaximumItemCount(10);
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
+        dataSeries = new XYSeries(chartTitle);
+        dataSeries.setMaximumItemCount(MAX_DATA_COUNT);
+        XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(dataSeries);
 
+        //Fill graph with minimum data to ensure the x-axis scales fully
+        for(int i = -MAX_DATA_COUNT; i <= 0; i++){
+        	addData(i, minY);
+        }
 	
-        JFreeChart chart = createChart(dataset, chartTitle);
+        JFreeChart chart = createChart(dataset, chartTitle, yAxisLabel, minY, maxY);
 		ChartPanel panel = (ChartPanel) new ChartPanel(chart);
         panel.setFillZoomRectangle(true);
         panel.setMouseWheelEnabled(true);
 		
 		
 		
-		panel.setPreferredSize(new java.awt.Dimension(500, 270));
+		panel.setPreferredSize(new java.awt.Dimension(300, 250));
 		setContentPane(panel);
 	}
 
 
-	public void addData(double newValue){
-		 Second current = new Second();
-		 dataSeries.add(current, newValue);  
+	public void addData(double x, double y){
+		 dataSeries.add(x, y);
 	}
 	
-
-//	static {
-//		// set a theme using the new shadow generator feature available in
-//		// 1.0.14 - for backwards compatibility it is not enabled by default
-//		ChartFactory.setChartTheme(new StandardChartTheme("JFree/Shadow", true));
-//	}
 	
-	 private JFreeChart createChart(XYDataset dataset, String title) {
+	 private JFreeChart createChart(XYDataset dataset, String title, String yAxisLabel, double minY, double maxY) {
 
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
+        JFreeChart chart = ChartFactory.createXYLineChart(
             title,  // title
-            "Seconds Elapsed",             // x-axis label
-            "Freq",   // y-axis label
-            dataset,            // data
-            true,               // create legend?
-            false,               // generate tooltips?
-            false               // generate URLs?
+            "Elapsed time(s)",             // x-axis label
+            yAxisLabel,   // y-axis label
+            dataset,
+            PlotOrientation.VERTICAL,
+            false,
+            true,
+            false
         );
 
         chart.setBackgroundPaint(Color.white);
@@ -78,6 +77,7 @@ public class Chart extends ApplicationFrame{
         plot.setDomainCrosshairVisible(true);
         plot.setRangeCrosshairVisible(true);
 
+
         XYItemRenderer r = plot.getRenderer();
         if (r instanceof XYLineAndShapeRenderer) {
             XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) r;
@@ -86,9 +86,12 @@ public class Chart extends ApplicationFrame{
             renderer.setDrawSeriesLineAsPath(true);
         }
 
-        DateAxis axis = (DateAxis) plot.getDomainAxis();
-        axis.setDateFormatOverride(new SimpleDateFormat("ss"));
-        axis.setAutoRange(true);
+        ValueAxis yAxis = plot.getRangeAxis();
+        yAxis.setRange(new Range(minY, maxY));
+//        ValueAxis axis = plot.getDomainAxis();
+//        axis.setR
+//        Range range = new Range(0, 60);
+//        axis.setRange(range);
 
         return chart;
 
