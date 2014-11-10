@@ -18,7 +18,7 @@ public class PowerMeasureMain {
 	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_FREQ_PROGRESS_FORMAT =  "Freq(MHz) %04d: CPU: %.0f, GPU: %.0f";
 
-	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f\n";
+	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, freqency and power.";
 	
 	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Freq: %s, Power: %s";	
@@ -26,7 +26,7 @@ public class PowerMeasureMain {
 
 
 	public static final String TEXT_FINAL_INDV_FORMAT = "Total(J): A15: %.2f, A7: %.2f, GPU: %.2f, MEM: %.2f\n";
-	public static final String TEXT_FINAL_POWER = "Total Power used over %d samples: %.2fJ\n";
+	public static final String TEXT_FINAL_POWER = "Total Power used over %d samples: %.2fJ";
 	public static final String TEXT_FINAL_FPS = "FPS over %d samples, Average: %d, SD: %.2f, Min: %d, Max: %d";
 
 	public static final long SAMPLE_RATE = 1000;
@@ -91,7 +91,12 @@ public class PowerMeasureMain {
 					return;
 				}
 				
-				printToScreen(String.format(TEXT_SAMPLES_REQUIRED, totalSamplesRequired));
+				if(totalSamplesRequired >= 0){
+					printToScreen(String.format(TEXT_SAMPLES_REQUIRED, totalSamplesRequired));
+				} else {
+					printToScreen(TEXT_INDEFINITE_SAMPLING);
+				}
+
 				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollFreq, shouldPollPower));
 
 			} catch (NumberFormatException e){
@@ -133,6 +138,8 @@ public class PowerMeasureMain {
 					String total = String.format(TEXT_TOTAL_FORMAT, numSamples, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
 					printToScreen(total);
 				}
+				
+				printToScreen("");
 			} catch(Exception e){
 				numSamples = currentSample;
 			}
@@ -146,7 +153,7 @@ public class PowerMeasureMain {
 
 		}
 
-
+		printToScreen("");
 
 
 		if(shouldPollFPS){
