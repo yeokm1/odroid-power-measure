@@ -6,12 +6,12 @@ public class PowerMeasureMain {
 
 
 	public static final String TEXT_HELP = "Invalid arguments. Please supply number of samples to take at once/second.";
-	
-	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: %d, Average FPS %d";
-	
+
+	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: %d, Average: %d";
+
 	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_FREQ_PROGRESS_FORMAT =  "Freq(MHz) %04d: CPU: %.0f, GPU: %.0f";
-	
+
 	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f\n";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec.";
 	public static final String TEXT_SAMPLES_REQUIRED = "Going for %d sample(s) at once/second";
@@ -76,26 +76,32 @@ public class PowerMeasureMain {
 		boolean shouldPollPower = true;
 		boolean shouldPollFPS = true;
 		boolean shouldPollFreq = true;
-		
+
 		while(shouldContinueSampling()){
+			int currentSample = numSamples;
+			numSamples++;
+			try{
+				if(shouldPollFPS){
+					String fpsStr = pollFPS();
+					printToScreen(fpsStr);
+				}
 
-			if(shouldPollFPS){
-				String fpsStr = pollFPS();
-				printToScreen(fpsStr);
+				if(shouldPollFreq){
+					String freqString = pollFreq();
+					printToScreen(freqString);
+				}
+
+				if(shouldPollPower){
+					String powerString = pollPower();
+					printToScreen(powerString);
+					String total = String.format(TEXT_TOTAL_FORMAT, numSamples, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
+					printToScreen(total);
+				}
+			} catch(Exception e){
+				numSamples = currentSample;
 			}
 
-			if(shouldPollFreq){
-				String freqString = pollFreq();
-				printToScreen(freqString);
-			}
-			
-			if(shouldPollPower){
-				String powerString = pollPower();
-				printToScreen(powerString);
-				String total = String.format(TEXT_TOTAL_FORMAT, numSamples, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
-				printToScreen(total);
-			}
-			
+
 
 			try {
 				Thread.sleep(SAMPLE_RATE);
@@ -105,15 +111,15 @@ public class PowerMeasureMain {
 		}
 
 
-		
-		
+
+
 		if(shouldPollFPS){
 			int averageFPS = getAverageFPS();
 			double sdFPS = getStandardDeviation(fpsData);
 			String fpsString = String.format(TEXT_FINAL_FPS, numSamples, averageFPS, sdFPS, minFPS, maxFPS);
 			printToScreen(fpsString);
 		}
-		
+
 		if(shouldPollPower){
 			double totalPower = totalA15Power + totalA7Power + totalGPUPower + totalMemPower;
 			String indvPowerString = String.format(TEXT_FINAL_INDV_FORMAT, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
@@ -121,15 +127,14 @@ public class PowerMeasureMain {
 			printToScreen(indvPowerString);
 			printToScreen(powerString);
 		}
-		
+
 
 	}
-	
-	public static String pollFPS(){
+
+	public static String pollFPS() throws Exception{
 		int fps = FPSRetrieval.getFPS(TIME_INTERVAL_NANO_SECONDS);
 
 		if(fps != FPSRetrieval.NO_FPS_CALCULATED){
-			numSamples++;
 			fpsData.add(fps);
 			totalFPS += fps;
 			numFPSSamples++;
@@ -142,20 +147,20 @@ public class PowerMeasureMain {
 				maxFPS = fps;
 			}
 		} else {
-			return null;
+			throw new Exception();
 		}
 
 		int averageFPS = getAverageFPS();
 		String output = String.format(TEXT_FPS_PROGRESS_FORMAT, numSamples ,fps, averageFPS);
 		return output;
 	}
-	
+
 	public static String pollPower(){
 		double currentA15Power = CPUStatsRetrieval.getA15Power();
 		double currentA7Power = CPUStatsRetrieval.getA7Power();
 		double currentGPUPower = GPUStatsRetrieval.getGPUPower();
 		double currentMEMPower = MemStatsRetrieval.getMemPower();
-		
+
 		totalA15Power += currentA15Power;
 		totalA7Power += currentA7Power;
 		totalGPUPower += currentGPUPower;
@@ -165,8 +170,8 @@ public class PowerMeasureMain {
 		String currentPower = String.format(TEXT_POWER_PROGRESS_FORMAT, numSamples, currentA15Power, currentA7Power, currentGPUPower, currentMEMPower);
 		return currentPower;
 	}
-	
-	
+
+
 	public static String pollFreq(){
 		double currentCPUFreq = CPUStatsRetrieval.getCPUFreq() / 1000;
 		double currentGPUFreq = GPUStatsRetrieval.getGPUFreq();
