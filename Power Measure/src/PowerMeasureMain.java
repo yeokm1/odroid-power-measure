@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class PowerMeasureMain {
 
 
-	public static final String VERSION = "v0.7";
+	public static final String VERSION = "v0.8";
 	
 	
 	public static final String ARG_NO_FREQ = "-freq";
@@ -204,8 +204,8 @@ public class PowerMeasureMain {
 						}
 
 					} else {
-						exec.shutdownNow();
 						endMessages();
+						System.exit(0);
 					}
 					isPreviousCommandStillRunning = false;
 				}
