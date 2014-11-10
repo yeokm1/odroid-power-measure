@@ -1,5 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public class PowerMeasureMain {
@@ -61,14 +64,15 @@ public class PowerMeasureMain {
 	private static long totalFPS = 0;
 	private static int numFPSSamples = 0;
 
-
+	private static boolean shouldPollFPS = true;
+	private static boolean shouldPollPower  = true;
+	private static boolean shouldPollFreq = true;
+	
+	
+	private static boolean isPreviousCommandStillRunning = false;
+	
 	public static void main(String[] args) {
 	
-		boolean shouldPollPower = true;
-		boolean shouldPollFPS = true;
-		boolean shouldPollFreq = true;
-		
-
 
 		if(args.length > 0){
 			try{
@@ -129,46 +133,55 @@ public class PowerMeasureMain {
 
 		InitADB.initADB();
 
+		
+		ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+		exec.scheduleAtFixedRate(new Runnable() {
+			  @Override
+			  public void run() {
+				  if(!isPreviousCommandStillRunning){
+					isPreviousCommandStillRunning = true;
+					
+					if(shouldContinueSampling()){
+						
 
+						int currentSample = numSamples;
+						numSamples++;
+						try{
+							if(shouldPollFPS){
+								String fpsStr = pollFPS();
+								printToScreen(fpsStr);
+							}
 
-		while(shouldContinueSampling()){
-			int currentSample = numSamples;
-			numSamples++;
-			try{
-				if(shouldPollFPS){
-					String fpsStr = pollFPS();
-					printToScreen(fpsStr);
-				}
+							if(shouldPollFreq){
+								String freqString = pollFreq();
+								printToScreen(freqString);
+							}
 
-				if(shouldPollFreq){
-					String freqString = pollFreq();
-					printToScreen(freqString);
-				}
+							if(shouldPollPower){
+								String powerString = pollPower();
+								printToScreen(powerString);
+								String total = String.format(TEXT_TOTAL_FORMAT, numSamples, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
+								printToScreen(total);
+							}
+							
+							printToScreen("");
+						} catch(Exception e){
+							numSamples = currentSample;
+						}
+						
+					} else {
+						exec.shutdownNow();
+						endMessages();
+					}
+					isPreviousCommandStillRunning = false;
+				  }
+			  }
+			}, 0, SAMPLE_RATE, TimeUnit.MILLISECONDS);
 
-				if(shouldPollPower){
-					String powerString = pollPower();
-					printToScreen(powerString);
-					String total = String.format(TEXT_TOTAL_FORMAT, numSamples, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
-					printToScreen(total);
-				}
-				
-				printToScreen("");
-			} catch(Exception e){
-				numSamples = currentSample;
-			}
-
-
-
-			try {
-				Thread.sleep(SAMPLE_RATE);
-			} catch (InterruptedException e) {
-			}
-
-		}
-
+	}
+	
+	public static void endMessages(){
 		printToScreen("");
-
-
 		if(shouldPollFPS){
 			int averageFPS = getAverageFPS();
 			double sdFPS = getStandardDeviation(fpsData);
@@ -183,8 +196,6 @@ public class PowerMeasureMain {
 			printToScreen(indvPowerString);
 			printToScreen(powerString);
 		}
-
-
 	}
 
 	public static String pollFPS() throws Exception{
@@ -202,6 +213,7 @@ public class PowerMeasureMain {
 			if(fps > maxFPS){
 				maxFPS = fps;
 			}
+			
 		} else {
 			throw new Exception();
 		}
@@ -281,6 +293,14 @@ public class PowerMeasureMain {
 
 
 
+	public static Chart openChart(){
+        Chart chart = new Chart(
+                "CPU Freq");
+        chart.pack();
+//        RefineryUtilities.centerFrameOnScreen(chart);
+        chart.setVisible(true);
+        return chart;
+	}
 
 
 
