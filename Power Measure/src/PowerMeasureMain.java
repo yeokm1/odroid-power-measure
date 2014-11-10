@@ -9,8 +9,15 @@ public class PowerMeasureMain {
 	public static final String ARG_NO_FREQ = "-freq";
 	public static final String ARG_NO_FPS = "-fps";
 	public static final String ARG_NO_POWER = "-power";
+	public static final String ARG_HELP = "help";
 
-	public static final String TEXT_HELP = "Invalid arguments. Please supply number of samples to take at once/second.";
+	public static final String TEXT_HELP= "Usage: java -jar powermeasure.jar [n] [-freq] [-fps] [-power]\n"
+			+ "n: number of samples to take at once/second (>=0)\n"
+			+ "-freq: Don't poll for frequency\n" 
+			+ "-fps: Don't poll for FPS\n" 
+			+ "-power: Don't poll for power\n"; 
+	public static final String TEXT_HELP_OFFER = "Add the \"help\" argument to know more"; 
+	public static final String TEXT_HELP_INVALID_NUMBER = "Invalid arguments. Please supply correct number of samples to take at once/second.";
 	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
 	
 	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: %d, Average: %d";
@@ -62,6 +69,7 @@ public class PowerMeasureMain {
 		boolean shouldPollFreq = true;
 		
 
+
 		if(args.length > 0){
 			try{
 
@@ -77,6 +85,9 @@ public class PowerMeasureMain {
 						case ARG_NO_POWER:
 							shouldPollPower = false;
 							break;
+						case ARG_HELP:
+							printToScreen(TEXT_HELP);
+							return;
 						default:
 							totalSamplesRequired = Long.parseLong(arg);
 							if(totalSamplesRequired < 0){
@@ -86,6 +97,7 @@ public class PowerMeasureMain {
 					}
 				}
 				
+				printToScreen(TEXT_HELP_OFFER);
 				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower){
 					printToScreen(String.format(TEXT_HELP_NO_POLL));
 					return;
@@ -100,11 +112,12 @@ public class PowerMeasureMain {
 				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollFreq, shouldPollPower));
 
 			} catch (NumberFormatException e){
-				printToScreen(TEXT_HELP);
+				printToScreen(TEXT_HELP_INVALID_NUMBER);
 				return;
 			}
 
 		} else {
+			printToScreen(TEXT_HELP_OFFER);
 			printToScreen(TEXT_INDEFINITE_SAMPLING);
 		}
 		
