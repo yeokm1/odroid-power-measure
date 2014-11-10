@@ -63,7 +63,7 @@ public class Chart extends ApplicationFrame{
             dataset,
             PlotOrientation.VERTICAL,
             false,
-            true,
+            false,
             false
         );
 
