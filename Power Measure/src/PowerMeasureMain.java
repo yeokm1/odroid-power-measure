@@ -345,7 +345,7 @@ public class PowerMeasureMain {
 	}
 
 	public static void initCPUFreqChart(){
-		cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", 0, 1700);
+		cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", 0, 1800);
 	}
 
 	public static void initGPUFreqChart(){
