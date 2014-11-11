@@ -9,22 +9,25 @@ import java.util.concurrent.TimeUnit;
 public class PowerMeasureMain {
 
 
-	public static final String VERSION = "v0.9";
+	public static final String VERSION = "v1.0";
 	
 	
 	public static final String ARG_NO_FREQ = "-freq";
 	public static final String ARG_NO_FPS = "-fps";
 	public static final String ARG_NO_POWER = "-power";
 	public static final String ARG_NO_CHART = "-chart";
+	public static final String ARG_NO_UTIL = "-util";
 	public static final String ARG_HELP = "help";
 
 	public static final String TEXT_HELP= "Usage: java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart]\n"
 			+ "n: number of samples to take at once/second (>=0)\n"
 			+ "-freq: Don't poll for frequency\n" 
 			+ "-fps: Don't poll for FPS\n" 
+			+ "-util: Don't show utilisation\n"
 			+ "-power: Don't poll for power\n"
 			+ "-chart: Don't show GUI chart\n"
 			+ VERSION;
+	
 	public static final String TEXT_HELP_OFFER = "Add the \"help\" argument to know more"; 
 	public static final String TEXT_HELP_INVALID_NUMBER = "Invalid arguments. Please supply correct number of samples to take at once/second.";
 	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
@@ -33,6 +36,7 @@ public class PowerMeasureMain {
 
 	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_FREQ_PROGRESS_FORMAT =  "Freq(MHz) %04d: CPU: %.0f, GPU: %.0f";
+	public static final String TEXT_UTIL_PROGRESS_FORMAT =  "Util(%%)   %04d: CPU: %.2f, GPU: %.2f";
 
 	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, freqency and power.";
@@ -71,14 +75,17 @@ public class PowerMeasureMain {
 	private static int numFPSSamples = 0;
 
 	private static boolean shouldPollFPS = true;
-	private static boolean shouldPollPower  = true;
+	private static boolean shouldPollUtil = true;
 	private static boolean shouldPollFreq = true;
+	private static boolean shouldPollPower  = true;
 	private static boolean shouldShowChart = true;
 
 
 	private static boolean isPreviousCommandStillRunning = false;
 
 	private static Chart fpsChart;
+	private static Chart cpuUtilChart;
+	private static Chart gpuUtilChart;
 	private static Chart cpuFreqChart;
 	private static Chart gpuFreqChart;
 	private static Chart powerChart;
@@ -94,6 +101,9 @@ public class PowerMeasureMain {
 					switch(arg){
 					case ARG_NO_FPS:
 						shouldPollFPS = false;
+						break;
+					case ARG_NO_UTIL:
+						shouldPollUtil = false;
 						break;
 					case ARG_NO_FREQ:
 						shouldPollFreq = false;
@@ -148,6 +158,11 @@ public class PowerMeasureMain {
 			if(shouldPollFPS){
 				initFPSChart();
 			}
+			
+			if(shouldPollUtil){
+				initCPUUtilChart();
+				initGPUUtilChart();
+			}
 
 			if(shouldPollFreq){
 				initCPUFreqChart();
@@ -157,6 +172,7 @@ public class PowerMeasureMain {
 			if(shouldPollPower){
 				initPowerChart();
 			}
+			
 		}
 
 		InitADB.initADB();
@@ -184,6 +200,11 @@ public class PowerMeasureMain {
 							if(shouldPollFPS){
 								String fpsStr = pollFPS();
 								printToScreen(fpsStr);
+							}
+							
+							if(shouldPollUtil){
+								String utilStr = pollUtil();
+								printToScreen(utilStr);
 							}
 
 							if(shouldPollFreq){
@@ -294,6 +315,19 @@ public class PowerMeasureMain {
 		String currentFreq = String.format(TEXT_FREQ_PROGRESS_FORMAT, numSamples, currentCPUFreq, currentGPUFreq);
 		return currentFreq;
 	}
+	
+	public static String pollUtil(){
+		double cpuUtil = CPUStatsRetrieval.getCPUUtilisation();
+		double gpuUtil = GPUStatsRetrieval.getGPUUtilisation();
+		
+		if(shouldShowChart){
+			cpuUtilChart.addData(numSamples, cpuUtil);
+			gpuUtilChart.addData(numSamples, gpuUtil);
+		}
+		
+		String currentUtil = String.format(TEXT_UTIL_PROGRESS_FORMAT, numSamples, cpuUtil, gpuUtil);
+		return currentUtil;
+	}
 
 
 	public static double getStandardDeviation(List<Integer> values) {
@@ -350,6 +384,14 @@ public class PowerMeasureMain {
 
 	public static void initGPUFreqChart(){
 		gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", 0, 700);
+	}
+	
+	public static void initCPUUtilChart(){
+		cpuUtilChart = openChart("CPU Utilisation (%)", "Util (%)", 0, 100);
+	}
+	
+	public static void initGPUUtilChart(){
+		gpuUtilChart = openChart("GPU Utilisation (%)", "Util (%)", 0, 100);
 	}
 
 	public static void initPowerChart(){
