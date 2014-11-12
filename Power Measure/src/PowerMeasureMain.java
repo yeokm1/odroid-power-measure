@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class PowerMeasureMain {
 
 
-	public static final String VERSION = "v1.0";
+	public static final String VERSION = "v1.1";
 	
 	
 	public static final String ARG_NO_FREQ = "-freq";
@@ -32,14 +32,14 @@ public class PowerMeasureMain {
 	public static final String TEXT_HELP_INVALID_NUMBER = "Invalid arguments. Please supply correct number of samples to take at once/second.";
 	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
 
-	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: %d, Average: %d";
+	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: Now: %d, Average: %d";
 
-	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
+	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15: %08.3f, A7: %08.3f, GPU: %08.3f, MEM: %08.3f";
 	public static final String TEXT_FREQ_PROGRESS_FORMAT =  "Freq(MHz) %04d: CPU: %.0f, GPU: %.0f";
-	public static final String TEXT_UTIL_PROGRESS_FORMAT =  "Util CPU(%%)  %04d: All:%.1f Core0:%.1f, Core1:%.1f, Core2:%.1f, Core3:%.1f\n"
-														  + "Util GPU(%%)  %04d: GPU:%.2f";
+	public static final String TEXT_UTIL_PROGRESS_FORMAT =  "CPU(%%)    %04d: All: %.1f, Core0: %.1f, Core1: %.1f, Core2: %.1f, Core3: %.1f\n"
+														  + "GPU(%%)    %04d: GPU: %.2f";
 
-	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
+	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15: %08.3f, A7: %08.3f, GPU: %08.3f, MEM: %08.3f";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, freqency and power.";
 
 	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Freq: %s, Power: %s";	

@@ -103,15 +103,6 @@ public class Chart extends ApplicationFrame{
 		plot.setDomainCrosshairVisible(true);
 		plot.setRangeCrosshairVisible(true);
 
-
-		//		XYItemRenderer r = plot.getRenderer();
-		//		if (r instanceof XYLineAndShapeRenderer) {
-		//			XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) r;
-		//			renderer.setBaseShapesVisible(true);
-		//			renderer.setBaseShapesFilled(true);
-		//			renderer.setDrawSeriesLineAsPath(true);
-		//		}
-
 		ValueAxis yAxis = plot.getRangeAxis();
 		yAxis.setRange(new Range(minY, maxY));
 		return chart;
