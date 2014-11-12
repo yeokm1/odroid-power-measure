@@ -10,8 +10,13 @@ public class CPUStatsRetrieval extends InfoRetrieval{
 	private static final String COMMAND_CPU_FREQ = String.format(COMMAND_SHELL_FORMAT, CPU_FREQ_FILE);
 	private static final String COMMAND_CPU_UTIL = String.format(COMMAND_SHELL_FORMAT, CPU_UTIL_FILE);
 
+	private static final int NUM_CORES = 4;
+	
 	private static long prevAllCoresLoad = 0;
 	private static long prevAllCoresTotal = 0;
+	
+	private static double[] prevCoreLoad = new double[NUM_CORES];
+	private static double[] prevCoreTotal = new double[NUM_CORES];
 
 	public static double getA7Power(){
 		double a7Power = getValueFromCommand(COMMAND_A7_POWER);
@@ -32,12 +37,15 @@ public class CPUStatsRetrieval extends InfoRetrieval{
 		double cpuFreq = getValueFromCommand(COMMAND_CPU_FREQ);
 		return cpuFreq;
 	}
+	
+	private static String[] getCPUCoreUtilTokens(){
+		String cpuOutput = runCommandAndGetOutput(COMMAND_CPU_UTIL);
+		String[] toks = cpuOutput.split(" ");
+		return toks;
+	}
 
 	public static double getCPUUtilisation() {
-
-		String cpuOutput = runCommandAndGetOutput(COMMAND_CPU_UTIL);
-
-		String[] toks = cpuOutput.split(" ");
+		String[] toks = getCPUCoreUtilTokens();
 
 		// From here http://www.linuxhowtos.org/System/procstat.htm
 		long user = Long.parseLong(toks[2]);
@@ -59,6 +67,38 @@ public class CPUStatsRetrieval extends InfoRetrieval{
 		return util;
 
 	} 
+	
+	
+	public static double[] getCPUCoresUtilisation(){
+		String[] toks = getCPUCoreUtilTokens();
+		double[] util = new double[NUM_CORES];
+		int initialOffset = 11; //The initial offset is to skip the all cores fields
+		int subsequentOffset = 10;
+		
+		for(int i = 0; i < NUM_CORES; i++){
+			int start = initialOffset + (i * subsequentOffset);
+			
+			long user = Long.parseLong(toks[start + 1]);
+			long nice = Long.parseLong(toks[start + 2]);
+			long system = Long.parseLong(toks[start + 3]);
+			long currentIdle = Long.parseLong(toks[start + 4]);
+			long iowait = Long.parseLong(toks[start + 5]);
+			long irq = Long.parseLong(toks[start + 6]);
+			long softirq = Long.parseLong(toks[start + 7]);
+
+			long currentLoad = user + nice + system + iowait + irq + softirq;
+			long currentTotal = currentLoad + currentIdle;
+
+			util[i] = ((((double) (currentLoad - prevCoreLoad[i])) / (currentTotal - prevCoreTotal[i])) * 100);
+
+			prevCoreLoad[i] = currentLoad;
+			prevCoreTotal[i] = currentTotal;
+		}
+		
+		return util;
+		
+		
+	}
 
 
 
