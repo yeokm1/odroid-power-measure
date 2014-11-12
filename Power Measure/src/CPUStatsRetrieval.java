@@ -10,8 +10,8 @@ public class CPUStatsRetrieval extends InfoRetrieval{
 	private static final String COMMAND_CPU_FREQ = String.format(COMMAND_SHELL_FORMAT, CPU_FREQ_FILE);
 	private static final String COMMAND_CPU_UTIL = String.format(COMMAND_SHELL_FORMAT, CPU_UTIL_FILE);
 
-	private static long prevLoad = 0;
-	private static long prevTotal = 0;
+	private static long prevAllCoresLoad = 0;
+	private static long prevAllCoresTotal = 0;
 
 	public static double getA7Power(){
 		double a7Power = getValueFromCommand(COMMAND_A7_POWER);
@@ -51,10 +51,10 @@ public class CPUStatsRetrieval extends InfoRetrieval{
 		long currentLoad = user + nice + system + iowait + irq + softirq;
 		long currentTotal = currentLoad + currentIdle;
 
-		double util = ((((double) (currentLoad - prevLoad)) / (currentTotal - prevTotal)) * 100);
+		double util = ((((double) (currentLoad - prevAllCoresLoad)) / (currentTotal - prevAllCoresTotal)) * 100);
 
-		prevLoad = currentLoad;
-		prevTotal = currentTotal;
+		prevAllCoresLoad = currentLoad;
+		prevAllCoresTotal = currentTotal;
 
 		return util;
 
