@@ -36,7 +36,8 @@ public class PowerMeasureMain {
 
 	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_FREQ_PROGRESS_FORMAT =  "Freq(MHz) %04d: CPU: %.0f, GPU: %.0f";
-	public static final String TEXT_UTIL_PROGRESS_FORMAT =  "Util(%%)   %04d: CPU: %.2f, GPU: %.2f";
+	public static final String TEXT_UTIL_PROGRESS_FORMAT =  "Util CPU(%%)  %04d: All:%.1f Core0:%.1f, Core1:%.1f, Core2:%.1f, Core3:%.1f\n"
+														  + "Util GPU(%%)  %04d: GPU:%.2f";
 
 	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15:%08.3f, A7:%08.3f, GPU:%08.3f, MEM:%08.3f";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, freqency and power.";
@@ -127,7 +128,7 @@ public class PowerMeasureMain {
 				}
 
 				printToScreen(TEXT_HELP_OFFER);
-				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower){
+				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower && !shouldPollUtil){
 					printToScreen(String.format(TEXT_HELP_NO_POLL));
 					return;
 				}
@@ -274,7 +275,7 @@ public class PowerMeasureMain {
 		}
 
 		if(shouldShowChart) {
-			fpsChart.addData(numSamples, fps);
+			fpsChart.addData(0, numSamples, fps);
 		}
 
 		int averageFPS = getAverageFPS();
@@ -296,7 +297,7 @@ public class PowerMeasureMain {
 		double totalCurrentPower = currentA15Power + currentA7Power + currentGPUPower + currentMEMPower;
 
 		if(shouldShowChart) {
-			powerChart.addData(numSamples, totalCurrentPower);
+			powerChart.addData(0, numSamples, totalCurrentPower);
 		}
 		
 		String currentPower = String.format(TEXT_POWER_PROGRESS_FORMAT, numSamples, currentA15Power, currentA7Power, currentGPUPower, currentMEMPower);
@@ -309,23 +310,35 @@ public class PowerMeasureMain {
 		double currentGPUFreq = GPUStatsRetrieval.getGPUFreq();
 
 		if(shouldShowChart) {
-			cpuFreqChart.addData(numSamples, currentCPUFreq);
-			gpuFreqChart.addData(numSamples, currentGPUFreq);
+			cpuFreqChart.addData(0, numSamples, currentCPUFreq);
+			gpuFreqChart.addData(0, numSamples, currentGPUFreq);
 		}
 		String currentFreq = String.format(TEXT_FREQ_PROGRESS_FORMAT, numSamples, currentCPUFreq, currentGPUFreq);
 		return currentFreq;
 	}
 	
 	public static String pollUtil(){
-		double cpuUtil = CPUStatsRetrieval.getCPUUtilisation();
+		double[] cpuUtil = CPUStatsRetrieval.getCPUCoresUtilisation();
 		double gpuUtil = GPUStatsRetrieval.getGPUUtilisation();
 		
-		if(shouldShowChart){
-			cpuUtilChart.addData(numSamples, cpuUtil);
-			gpuUtilChart.addData(numSamples, gpuUtil);
+		double totalCPUUtil = 0;
+		
+		for(double coreUtil : cpuUtil){
+			totalCPUUtil += coreUtil;
 		}
 		
-		String currentUtil = String.format(TEXT_UTIL_PROGRESS_FORMAT, numSamples, cpuUtil, gpuUtil);
+		double averageCPUUtil = totalCPUUtil / cpuUtil.length;
+		
+
+		if(shouldShowChart){
+			for(int i = 0; i < cpuUtil.length; i++){
+				cpuUtilChart.addData(i, numSamples, cpuUtil[i]);
+			}
+			
+			gpuUtilChart.addData(0, numSamples, gpuUtil);
+		}
+
+		String currentUtil = String.format(TEXT_UTIL_PROGRESS_FORMAT, numSamples, averageCPUUtil, cpuUtil[0], cpuUtil[1], cpuUtil[2], cpuUtil[3], numSamples, gpuUtil);
 		return currentUtil;
 	}
 
@@ -375,32 +388,32 @@ public class PowerMeasureMain {
 
 
 	public static void initFPSChart(){
-		fpsChart = openChart("FPS", "FPS", 0, 65);
+		fpsChart = openChart("FPS", "FPS", new String[]{"FPS"}, 0, 65);
 	}
 
 	public static void initCPUFreqChart(){
-		cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", 0, 1800);
+		cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", new String[]{"Freq"}, 0, 1800);
 	}
 
 	public static void initGPUFreqChart(){
-		gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", 0, 700);
+		gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", new String[]{"Freq"}, 0, 700);
 	}
 	
 	public static void initCPUUtilChart(){
-		cpuUtilChart = openChart("CPU Utilisation (%)", "Util (%)", 0, 100);
+		cpuUtilChart = openChart("CPU Utilisation (%)", "Util (%)", new String[]{"Core0", "Core1", "Core2", "Core3"}, 0, 105);
 	}
 	
 	public static void initGPUUtilChart(){
-		gpuUtilChart = openChart("GPU Utilisation (%)", "Util (%)", 0, 100);
+		gpuUtilChart = openChart("GPU Utilisation (%)", "Util (%)", new String[]{"Util"}, 0, 105);
 	}
 
 	public static void initPowerChart(){
-		powerChart = openChart("Power use (W)", "Power (W)", 0, 7);
+		powerChart = openChart("Power use (W)", "Power (W)", new String[]{"Power"}, 0, 7);
 	}
 
 
-	public static Chart openChart(String title, String yAxisLabel, double minY, double maxY){
-		Chart chart = new Chart(title, yAxisLabel, minY, maxY);
+	public static Chart openChart(String title, String yAxisLabel, String[] dataSetLabels, double minY, double maxY){
+		Chart chart = new Chart(title, yAxisLabel, dataSetLabels, minY, maxY);
 		chart.pack();
 		chart.setVisible(true);
 		return chart;
