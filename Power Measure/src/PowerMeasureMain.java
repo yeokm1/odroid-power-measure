@@ -27,7 +27,7 @@ public class PowerMeasureMain {
 			+ "-util: Don't show utilisation\n"
 			+ "-power: Don't poll for power\n"
 			+ "-chart: Don't show GUI chart\n"
-			+ "extpower:(com port name) : Read full system power from COM Port. Requires power poll to be active"
+			+ "extpower:(com port name) : Read external system power from COM Port. Requires power poll to be active"
 			+ VERSION;
 
 	public static final String TEXT_HELP_OFFER = "Add the \"help\" argument to know more"; 
