@@ -55,7 +55,7 @@ public class ExternalPowerRetrieval {
 				try{
 					powerSoFar = Double.parseDouble(splitted[0]);
 				} catch(NumberFormatException e){
-					System.out.println("ext power parse error");
+					//Ignore
 				}
 			}
 			
