@@ -21,8 +21,10 @@ public abstract class SerialNewResultListener implements SerialPortEventListener
 				for (byte b: buffer) {
 					//Keep reading until encounter newline characters
 					if (b == '\r' || b == '\n') {
-						latestStringResult(message.toString());
-						message.setLength(0);
+						if(message.length() > 0){
+							latestStringResult(message.toString());
+							message.setLength(0);
+						}
 					} else {
 						message.append((char)b);
 					}
