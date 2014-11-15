@@ -86,7 +86,7 @@ public class PowerMeasureMain {
 	private static boolean shouldPollFreq = true;
 	private static boolean shouldPollPower  = true;
 	private static boolean shouldShowChart = true;
-	private static boolean shouldMeasureExtPower = false;
+	private static boolean shouldPollExtPower = false;
 
 
 	private static boolean isPreviousCommandStillRunning = false;
@@ -128,7 +128,7 @@ public class PowerMeasureMain {
 					default:
 						if(arg.startsWith(ARG_EXT_POWER)){
 							serialPortname = arg.replaceAll(ARG_EXT_POWER, "");
-							shouldMeasureExtPower = true;
+							shouldPollExtPower = true;
 						} else {
 							totalSamplesRequired = Long.parseLong(arg);
 							if(totalSamplesRequired < 0){
@@ -139,7 +139,11 @@ public class PowerMeasureMain {
 				}
 
 				printToScreen(TEXT_HELP_OFFER);
-				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower && !shouldPollUtil && !shouldMeasureExtPower){
+				
+				if(!shouldPollPower){
+					shouldPollExtPower = false;
+				}
+				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower && !shouldPollUtil && !shouldPollExtPower){
 					printToScreen(String.format(TEXT_HELP_NO_POLL));
 					return;
 				}
@@ -150,7 +154,7 @@ public class PowerMeasureMain {
 					printToScreen(TEXT_INDEFINITE_SAMPLING);
 				}
 
-				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollUtil, shouldPollFreq, shouldPollPower, shouldShowChart, shouldMeasureExtPower, serialPortname));
+				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollUtil, shouldPollFreq, shouldPollPower, shouldShowChart, shouldPollExtPower, serialPortname));
 
 			} catch (NumberFormatException e){
 				printToScreen(TEXT_HELP_INVALID_NUMBER);
@@ -166,13 +170,15 @@ public class PowerMeasureMain {
 
 		fpsData = new ArrayList<Integer>();
 
-		if(shouldMeasureExtPower){
+		if(shouldPollExtPower && shouldPollPower){
 			boolean serialPortStartStatus = ExternalPowerRetrieval.startSystemPowerRetrieval(serialPortname);
 
 			if(!serialPortStartStatus){
-				shouldMeasureExtPower = false;
+				shouldPollExtPower = false;
 				printToScreen(TEXT_SERIAL_PORT_CANNOT_OPEN);
 			}
+		} else {
+			shouldPollExtPower = false;
 		}
 
 
@@ -275,7 +281,7 @@ public class PowerMeasureMain {
 			printToScreen(indvPowerString);
 			printToScreen(powerString);
 
-			if(shouldMeasureExtPower){
+			if(shouldPollExtPower){
 				String externalPowerString = String.format(TEXT_EXTERNAL_POWER_PROGRESS_FORMAT, numSamples, totalExternalPower);
 				printToScreen(externalPowerString);
 			}
@@ -332,7 +338,7 @@ public class PowerMeasureMain {
 
 		String currentPower = String.format(TEXT_POWER_PROGRESS_FORMAT, numSamples, currentA15Power, currentA7Power, currentGPUPower, currentMEMPower);
 
-		if(shouldMeasureExtPower){
+		if(shouldPollExtPower){
 			double externalPower = ExternalPowerRetrieval.getPower();
 			totalExternalPower += externalPower;
 			if(shouldShowChart){
@@ -452,7 +458,7 @@ public class PowerMeasureMain {
 
 	public static void initPowerChart(){
 
-		if(shouldMeasureExtPower){
+		if(shouldPollExtPower){
 			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM", "System Total"}, 0, 10);
 		} else {
 			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM"}, 0, 5);
