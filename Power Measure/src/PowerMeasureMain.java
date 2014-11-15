@@ -437,38 +437,38 @@ public class PowerMeasureMain {
 
 
 	public static void initFPSChart(){
-		fpsChart = openChart("FPS", "FPS", new String[]{"FPS"}, 0, 65);
+		fpsChart = openChart("FPS", "FPS", new String[]{"FPS"}, 0, 65, true, 0);
 	}
 
 	public static void initCPUFreqChart(){
-		cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", new String[]{"Freq"}, 0, 1800);
+		cpuFreqChart = openChart("CPU Frequency (Mhz)", "Freq (Mhz)", new String[]{"Freq"}, 0, 1800, false, 0);
 	}
 
 	public static void initGPUFreqChart(){
-		gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", new String[]{"Freq"}, 0, 700);
+		gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", new String[]{"Freq"}, 0, 700, false, 0);
 	}
 
 	public static void initCPUUtilChart(){
-		cpuUtilChart = openChart("CPU Utilisation (%)", "Util (%)", new String[]{"Core0", "Core1", "Core2", "Core3"}, 0, 105);
+		cpuUtilChart = openChart("CPU Utilisation (%)", "Util (%)", new String[]{"Core0", "Core1", "Core2", "Core3"}, 0, 105, false, 0);
 	}
 
 	public static void initGPUUtilChart(){
-		gpuUtilChart = openChart("GPU Utilisation (%)", "Util (%)", new String[]{"Util"}, 0, 105);
+		gpuUtilChart = openChart("GPU Utilisation (%)", "Util (%)", new String[]{"Util"}, 0, 105, false, 0);
 	}
 
 	public static void initPowerChart(){
 
 		if(shouldPollExtPower){
-			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM", "System Total"}, 0, 10);
+			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM", "System Total"}, 0, 10, true, 1);
 		} else {
-			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM"}, 0, 5);
+			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM"}, 0, 5, true, 1);
 		}
 
 	}
 
 
-	public static Chart openChart(String title, String yAxisLabel, String[] dataSetLabels, double minY, double maxY){
-		Chart chart = new Chart(title, yAxisLabel, dataSetLabels, minY, maxY);
+	public static Chart openChart(String title, String yAxisLabel, String[] dataSetLabels, double minY, double maxY, boolean showPointValues, int numDecimalPlaces){
+		Chart chart = new Chart(title, yAxisLabel, dataSetLabels, minY, maxY, showPointValues, numDecimalPlaces);
 		chart.pack();
 		chart.setVisible(true);
 		return chart;

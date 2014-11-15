@@ -6,6 +6,8 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.labels.StandardXYItemLabelGenerator;
+import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -20,12 +22,14 @@ import org.jfree.ui.RectangleInsets;
 public class Chart extends ApplicationFrame{
 
 
-	private static final int MAX_DATA_COUNT = 20;
+	private static final int MAX_DATA_COUNT = 15;
 	private static final long serialVersionUID = -244453266060112290L;
 	private List<XYSeriesCollection> dataCollection;
 	private XYPlot plot;
+	
+	private String labelFormat;
 
-	public Chart(String chartTitle, String yAxisLabel, String[] dataSetLabels, double minY, double maxY) {
+	public Chart(String chartTitle, String yAxisLabel, String[] dataSetLabels, double minY, double maxY, boolean showPointValues, int numDecimalPlaces) {
 		super(chartTitle);
 
 		dataCollection = new ArrayList<XYSeriesCollection>();
@@ -35,9 +39,10 @@ public class Chart extends ApplicationFrame{
 
 		JFreeChart chart = createChart(dataset, chartTitle, yAxisLabel, minY, maxY);
 
-		for(int i = 0; i < dataSetLabels.length; i++){
-			createAdditionalDataset(dataSetLabels[i]);
+		labelFormat = "%." + numDecimalPlaces + "f";
 
+		for(int i = 0; i < dataSetLabels.length; i++){
+			createAdditionalDataset(dataSetLabels[i], showPointValues);
 		}
 
 
@@ -62,21 +67,42 @@ public class Chart extends ApplicationFrame{
 		return new XYSeriesCollection(series);
 	}
 
-	public void createAdditionalDataset(String setTitle) {
+	public void createAdditionalDataset(String setTitle, boolean showDataLabels) {
 		dataCollection.add(createDataset(setTitle));
 		plot.setDataset(dataCollection.size() - 1, dataCollection.get(dataCollection.size() - 1));
 
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+
+		if(showDataLabels){
+			XYItemLabelGenerator itemLabelGenerator = new CustomItemLabelGenerator();
+			renderer.setBaseItemLabelGenerator(itemLabelGenerator);
+			renderer.setSeriesItemLabelsVisible(0, true);
+		}
+		
 		renderer.setBaseShapesVisible(true);
 		renderer.setBaseShapesFilled(true);
 		renderer.setDrawSeriesLineAsPath(true);
 		plot.setRenderer(dataCollection.size() - 1, renderer);
 	}
+	
+	class CustomItemLabelGenerator extends StandardXYItemLabelGenerator{
+
+		private static final long serialVersionUID = 4826373198488610515L;
+		
+		@Override
+		public String generateLabel(XYDataset arg0, int arg1, int arg2){
+			double value = arg0.getYValue(arg1, arg2);
+			String result = String.format(labelFormat, value);
+			return result;
+		}
+		
+	}
 
 
 
 	public void addData(int datasetIndex, double x, double y){
-		dataCollection.get(datasetIndex).getSeries(0).add(x, y);
+		XYSeries series = dataCollection.get(datasetIndex).getSeries(0);
+		series.add(x, y);
 	}
 
 
