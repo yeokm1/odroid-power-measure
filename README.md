@@ -9,13 +9,14 @@ A Java program that dynamically shows FPS, CPU/GPU frequency and power of Odroid
 Go to Settings -> Developer Options. Enable "Show CPU usage" option.
 
 ```bash
-java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart]
+java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart] [extpower:(com port name)]
 n: number of samples to take at once/second (>=0)"
 -freq: Don't poll for frequency
 -fps: Don't poll for FPS
 -util: Don't poll for utilisation
 -power: Don't poll for power
 -chart: Don't show chart
+extpower:(com port name) : Read external system power from COM Port. Requires power poll to be active
 
 ```
 
@@ -39,6 +40,8 @@ GPU Freq: "/sys/devices/platform/pvrsrvkm.0/sgx_dvfs_cur_clk"
 CPU Util: "/proc/stat"  
 GPU Util: "/sys/module/pvrsrvkm/parameters/sgx_gpu_utilization"
 
-
 ##FPS
 FPS command: "dumpsys SurfaceFlinger --latency SurfaceView"
+
+##External system power
+This has to be used in conjuction with my [Arduino hardware tool](https://github.com/yeokm1/power_measure_tool).
