@@ -22,14 +22,14 @@ import org.jfree.ui.RectangleInsets;
 public class Chart extends ApplicationFrame{
 
 
-	private static final int MAX_DATA_COUNT = 15;
+	private static final int MAX_DATA_COUNT = 20;
 	private static final long serialVersionUID = -244453266060112290L;
 	private List<XYSeriesCollection> dataCollection;
 	private XYPlot plot;
 	
 	private String labelFormat;
 
-	public Chart(String chartTitle, String yAxisLabel, String[] dataSetLabels, double minY, double maxY, boolean showPointValues, int numDecimalPlaces) {
+	public Chart(String chartTitle, String yAxisLabel, String[] dataSetLabels, int chartWidth, int chartHeight, double minY, double maxY, boolean showPointValues, int numDecimalPlaces, boolean showLegend) {
 		super(chartTitle);
 
 		dataCollection = new ArrayList<XYSeriesCollection>();
@@ -37,7 +37,7 @@ public class Chart extends ApplicationFrame{
 
 		XYSeriesCollection dataset = createDataset(chartTitle);
 
-		JFreeChart chart = createChart(dataset, chartTitle, yAxisLabel, minY, maxY);
+		JFreeChart chart = createChart(dataset, chartTitle, yAxisLabel, minY, maxY, showLegend);
 
 		labelFormat = "%." + numDecimalPlaces + "f";
 
@@ -50,7 +50,7 @@ public class Chart extends ApplicationFrame{
 		panel.setFillZoomRectangle(true);
 		panel.setMouseWheelEnabled(true);
 
-		panel.setPreferredSize(new java.awt.Dimension(300, 250));
+		panel.setPreferredSize(new java.awt.Dimension(chartWidth, chartHeight));
 
 		setContentPane(panel);
 	}
@@ -106,7 +106,7 @@ public class Chart extends ApplicationFrame{
 	}
 
 
-	private JFreeChart createChart(XYDataset dataset, String title, String yAxisLabel, double minY, double maxY) {
+	private JFreeChart createChart(XYDataset dataset, String title, String yAxisLabel, double minY, double maxY, boolean showLegend) {
 
 		JFreeChart chart = ChartFactory.createXYLineChart(
 				title,  // title
@@ -114,7 +114,7 @@ public class Chart extends ApplicationFrame{
 				yAxisLabel,   // y-axis label
 				dataset,
 				PlotOrientation.VERTICAL,
-				true,
+				showLegend,
 				false,
 				false
 				);
