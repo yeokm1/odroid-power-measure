@@ -40,9 +40,9 @@ public class PowerMeasureMain {
 														  + "GPU(%%)    %04d: GPU: %.2f";
 
 	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15: %08.3f, A7: %08.3f, GPU: %08.3f, MEM: %08.3f";
-	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, freqency and power.";
+	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, utilisation, freqency and power with charts shown";
 
-	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Freq: %s, Power: %s";	
+	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Util: %s, Freq: %s, Power: %s, Chart: %s";	
 	public static final String TEXT_SAMPLES_REQUIRED = "Going for %d sample(s) at once/second";
 
 
@@ -139,7 +139,7 @@ public class PowerMeasureMain {
 					printToScreen(TEXT_INDEFINITE_SAMPLING);
 				}
 
-				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollFreq, shouldPollPower));
+				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollUtil, shouldPollFreq, shouldPollPower, shouldShowChart));
 
 			} catch (NumberFormatException e){
 				printToScreen(TEXT_HELP_INVALID_NUMBER);
