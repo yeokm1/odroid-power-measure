@@ -10,44 +10,48 @@ public class PowerMeasureMain {
 
 
 	public static final String VERSION = "v1.1";
-	
-	
+
+
 	public static final String ARG_NO_FREQ = "-freq";
 	public static final String ARG_NO_FPS = "-fps";
 	public static final String ARG_NO_POWER = "-power";
 	public static final String ARG_NO_CHART = "-chart";
 	public static final String ARG_NO_UTIL = "-util";
+	public static final String ARG_EXT_POWER = "extpower:";
 	public static final String ARG_HELP = "help";
 
-	public static final String TEXT_HELP= "Usage: java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart]\n"
+	public static final String TEXT_HELP= "Usage: java -jar powermeasure.jar [n] [-freq] [-fps] [-power] [-chart] [extpower:(com port name)]\n"
 			+ "n: number of samples to take at once/second (>=0)\n"
 			+ "-freq: Don't poll for frequency\n" 
 			+ "-fps: Don't poll for FPS\n" 
 			+ "-util: Don't show utilisation\n"
 			+ "-power: Don't poll for power\n"
 			+ "-chart: Don't show GUI chart\n"
+			+ "extpower:(com port name) : Read full system power from COM Port. Requires power poll to be active"
 			+ VERSION;
-	
+
 	public static final String TEXT_HELP_OFFER = "Add the \"help\" argument to know more"; 
 	public static final String TEXT_HELP_INVALID_NUMBER = "Invalid arguments. Please supply correct number of samples to take at once/second.";
 	public static final String TEXT_HELP_NO_POLL = "Invalid arguments. You need to poll at least for something.";
+	public static final String TEXT_SERIAL_PORT_CANNOT_OPEN = "Cannot open serial port. External system power measurement turned off."; 
 
 	public static final String TEXT_FPS_PROGRESS_FORMAT = 	"FPS(n)    %04d: Now: %d, Average: %d";
-
 	public static final String TEXT_POWER_PROGRESS_FORMAT = "Power(W)  %04d: A15: %08.3f, A7: %08.3f, GPU: %08.3f, MEM: %08.3f";
+	public static final String TEXT_EXTERNAL_POWER_PROGRESS_FORMAT = "\nE-Power(W)%04d: Now: %.3f, Total : %.1fJ";
 	public static final String TEXT_FREQ_PROGRESS_FORMAT =  "Freq(MHz) %04d: CPU: %.0f, GPU: %.0f";
 	public static final String TEXT_UTIL_PROGRESS_FORMAT =  "CPU(%%)    %04d: All: %.1f, Core0: %.1f, Core1: %.1f, Core2: %.1f, Core3: %.1f\n"
-														  + "GPU(%%)    %04d: GPU: %.2f";
+			+ "GPU(%%)    %04d: GPU: %.2f";
 
 	public static final String TEXT_TOTAL_FORMAT =    		"Total(J)  %04d: A15: %08.3f, A7: %08.3f, GPU: %08.3f, MEM: %08.3f";
 	public static final String TEXT_INDEFINITE_SAMPLING = "Now sampling indefinitely at once/sec for FPS, utilisation, freqency and power with charts shown";
 
-	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Util: %s, Freq: %s, Power: %s, Chart: %s";	
+	public static final String TEXT_SAMPLE_TYPES = "FPS: %s, Util: %s, Freq: %s, Power: %s, Chart: %s, External Power: %s, COM Port: %s";	
 	public static final String TEXT_SAMPLES_REQUIRED = "Going for %d sample(s) at once/second";
 
 
 	public static final String TEXT_FINAL_INDV_FORMAT = "Total(J): A15: %.2f, A7: %.2f, GPU: %.2f, MEM: %.2f\n";
-	public static final String TEXT_FINAL_POWER = "Total Power used over %d samples: %.2fJ";
+	public static final String TEXT_FINAL_INTERNAL_POWER = "Total internal power used over %d samples: %.2fJ";
+	public static final String TEXT_FINAL_EXTERNAL_POWER = "Total external power used over %d samples: %.2fJ";
 	public static final String TEXT_FINAL_FPS = "FPS over %d samples, Average: %d, SD: %.2f, Min: %d, Max: %d";
 
 	public static final long SAMPLE_RATE = 1000;
@@ -65,6 +69,8 @@ public class PowerMeasureMain {
 	private static double totalGPUPower = 0;
 	private static double totalMemPower = 0;
 
+	private static double totalExternalPower = 0;
+
 	private static int numSamples = 0;
 
 	private static int minFPS = Integer.MAX_VALUE;
@@ -80,6 +86,7 @@ public class PowerMeasureMain {
 	private static boolean shouldPollFreq = true;
 	private static boolean shouldPollPower  = true;
 	private static boolean shouldShowChart = true;
+	private static boolean shouldMeasureExtPower = false;
 
 
 	private static boolean isPreviousCommandStillRunning = false;
@@ -91,12 +98,12 @@ public class PowerMeasureMain {
 	private static Chart gpuFreqChart;
 	private static Chart powerChart;
 
-	public static void main(String[] args) {
+	private static String serialPortname = "N/A";
 
+	public static void main(String[] args) {
 
 		if(args.length > 0){
 			try{
-
 
 				for(String arg : args){
 					switch(arg){
@@ -119,16 +126,20 @@ public class PowerMeasureMain {
 						printToScreen(TEXT_HELP);
 						return;
 					default:
-						totalSamplesRequired = Long.parseLong(arg);
-						if(totalSamplesRequired < 0){
-							throw new NumberFormatException();
+						if(arg.startsWith(ARG_EXT_POWER)){
+							serialPortname = arg.replaceAll(ARG_EXT_POWER, "");
+							shouldMeasureExtPower = true;
+						} else {
+							totalSamplesRequired = Long.parseLong(arg);
+							if(totalSamplesRequired < 0){
+								throw new NumberFormatException();
+							}
 						}
-
 					}
 				}
 
 				printToScreen(TEXT_HELP_OFFER);
-				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower && !shouldPollUtil){
+				if(!shouldPollFPS && !shouldPollFreq && !shouldPollPower && !shouldPollUtil && !shouldMeasureExtPower){
 					printToScreen(String.format(TEXT_HELP_NO_POLL));
 					return;
 				}
@@ -139,7 +150,7 @@ public class PowerMeasureMain {
 					printToScreen(TEXT_INDEFINITE_SAMPLING);
 				}
 
-				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollUtil, shouldPollFreq, shouldPollPower, shouldShowChart));
+				printToScreen(String.format(TEXT_SAMPLE_TYPES, shouldPollFPS, shouldPollUtil, shouldPollFreq, shouldPollPower, shouldShowChart, shouldMeasureExtPower, serialPortname));
 
 			} catch (NumberFormatException e){
 				printToScreen(TEXT_HELP_INVALID_NUMBER);
@@ -155,11 +166,21 @@ public class PowerMeasureMain {
 
 		fpsData = new ArrayList<Integer>();
 
+		if(shouldMeasureExtPower){
+			boolean serialPortStartStatus = ExternalPowerRetrieval.startSystemPowerRetrieval(serialPortname);
+
+			if(!serialPortStartStatus){
+				shouldMeasureExtPower = false;
+				printToScreen(TEXT_SERIAL_PORT_CANNOT_OPEN);
+			}
+		}
+
+
 		if(shouldShowChart){
 			if(shouldPollFPS){
 				initFPSChart();
 			}
-			
+
 			if(shouldPollUtil){
 				initCPUUtilChart();
 				initGPUUtilChart();
@@ -173,7 +194,7 @@ public class PowerMeasureMain {
 			if(shouldPollPower){
 				initPowerChart();
 			}
-			
+
 		}
 
 		InitADB.initADB();
@@ -202,7 +223,7 @@ public class PowerMeasureMain {
 								String fpsStr = pollFPS();
 								printToScreen(fpsStr);
 							}
-							
+
 							if(shouldPollUtil){
 								String utilStr = pollUtil();
 								printToScreen(utilStr);
@@ -227,6 +248,7 @@ public class PowerMeasureMain {
 
 					} else {
 						endMessages();
+						ExternalPowerRetrieval.stopSystemPowerRetrieval();
 						System.exit(0);
 					}
 					isPreviousCommandStillRunning = false;
@@ -248,9 +270,17 @@ public class PowerMeasureMain {
 		if(shouldPollPower){
 			double totalPower = totalA15Power + totalA7Power + totalGPUPower + totalMemPower;
 			String indvPowerString = String.format(TEXT_FINAL_INDV_FORMAT, totalA15Power, totalA7Power, totalGPUPower, totalMemPower);
-			String powerString = String.format(TEXT_FINAL_POWER, numSamples, totalPower);
+			String powerString = String.format(TEXT_FINAL_INTERNAL_POWER, numSamples, totalPower);
+
 			printToScreen(indvPowerString);
 			printToScreen(powerString);
+
+			if(shouldMeasureExtPower){
+				String externalPowerString = String.format(TEXT_EXTERNAL_POWER_PROGRESS_FORMAT, numSamples, totalExternalPower);
+				printToScreen(externalPowerString);
+			}
+
+
 		}
 	}
 
@@ -299,8 +329,21 @@ public class PowerMeasureMain {
 		if(shouldShowChart) {
 			powerChart.addData(0, numSamples, totalCurrentPower);
 		}
-		
+
 		String currentPower = String.format(TEXT_POWER_PROGRESS_FORMAT, numSamples, currentA15Power, currentA7Power, currentGPUPower, currentMEMPower);
+
+		if(shouldMeasureExtPower){
+			double externalPower = ExternalPowerRetrieval.getPower();
+			totalExternalPower += externalPower;
+			if(shouldShowChart){
+				powerChart.addData(1, numSamples, externalPower);
+			}
+
+			String externalPowerProgress = String.format(TEXT_EXTERNAL_POWER_PROGRESS_FORMAT, numSamples, externalPower, totalExternalPower);
+			currentPower += externalPowerProgress;
+		}
+
+
 		return currentPower;
 	}
 
@@ -316,25 +359,25 @@ public class PowerMeasureMain {
 		String currentFreq = String.format(TEXT_FREQ_PROGRESS_FORMAT, numSamples, currentCPUFreq, currentGPUFreq);
 		return currentFreq;
 	}
-	
+
 	public static String pollUtil(){
 		double[] cpuUtil = CPUStatsRetrieval.getCPUCoresUtilisation();
 		double gpuUtil = GPUStatsRetrieval.getGPUUtilisation();
-		
+
 		double totalCPUUtil = 0;
-		
+
 		for(double coreUtil : cpuUtil){
 			totalCPUUtil += coreUtil;
 		}
-		
+
 		double averageCPUUtil = totalCPUUtil / cpuUtil.length;
-		
+
 
 		if(shouldShowChart){
 			for(int i = 0; i < cpuUtil.length; i++){
 				cpuUtilChart.addData(i, numSamples, cpuUtil[i]);
 			}
-			
+
 			gpuUtilChart.addData(0, numSamples, gpuUtil);
 		}
 
@@ -398,17 +441,23 @@ public class PowerMeasureMain {
 	public static void initGPUFreqChart(){
 		gpuFreqChart = openChart("GPU Frequency (Mhz)", "Freq (Mhz)", new String[]{"Freq"}, 0, 700);
 	}
-	
+
 	public static void initCPUUtilChart(){
 		cpuUtilChart = openChart("CPU Utilisation (%)", "Util (%)", new String[]{"Core0", "Core1", "Core2", "Core3"}, 0, 105);
 	}
-	
+
 	public static void initGPUUtilChart(){
 		gpuUtilChart = openChart("GPU Utilisation (%)", "Util (%)", new String[]{"Util"}, 0, 105);
 	}
 
 	public static void initPowerChart(){
-		powerChart = openChart("Power use (W)", "Power (W)", new String[]{"Power"}, 0, 7);
+
+		if(shouldMeasureExtPower){
+			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM", "System Total"}, 0, 10);
+		} else {
+			powerChart = openChart("Power use (W)", "Power (W)", new String[]{"CPU + GPU + RAM"}, 0, 5);
+		}
+
 	}
 
 
