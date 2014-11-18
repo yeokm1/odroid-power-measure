@@ -3,6 +3,8 @@ odroid-power-measure
 
 A Java program that dynamically shows FPS, CPU/GPU frequency and power of Odroid-XU.
 
+<a href="misc/screenshot.png"><img src="misc/screenshot.png" align="centre"></a>
+If not disabled, GUI charts will be shown and updated dynamically.
 
 ##Usage
 
