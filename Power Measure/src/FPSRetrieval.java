@@ -20,15 +20,19 @@ public class FPSRetrieval extends InfoRetrieval {
 			}
 
 			//First line is not used
+			
+			int indexOfLastLine = output.size() - 1;
 
-			String lastLine = output.get(output.size() - 1);
+			String lastLine = output.get(indexOfLastLine);
 			String[] split = splitLine(lastLine);
 			String lastFrameFinishTimeStr = split[2];
 
 			double lastFrameFinishTime = Double.parseDouble(lastFrameFinishTimeStr);
 			int frameCount = 0;
+			
 
-			for(int i = 1; i <= 128 ; i++){
+
+			for(int i = 1; i <= indexOfLastLine ; i++){
 				String[] splitted = splitLine(output.get(i));
 				String thisFrameFinishTimeStr = splitted[2];
 				double thisFrameFirstTime = Double.parseDouble(thisFrameFinishTimeStr);
@@ -40,7 +44,9 @@ public class FPSRetrieval extends InfoRetrieval {
 
 			if(frameCount > MAX_FPS_ALLOWED){
 				return MAX_FPS_ALLOWED;
-			} else {
+			} else if(frameCount == 1){
+				return NO_FPS_CALCULATED;
+			} else{
 				return frameCount;
 			}
 		}catch (Exception e){
